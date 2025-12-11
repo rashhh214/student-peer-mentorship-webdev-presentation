@@ -1,0 +1,169 @@
+<?php
+session_start();
+include '../db_connect.php';
+
+if (!isset($_SESSION['student_id'])) {
+  header("Location: student_login.php");
+  exit();
+}
+
+$student_id = $_SESSION['student_id'];
+$student_name = $_SESSION['student_name'];
+
+if (isset($_GET['join'])) {
+  $tutorial_id = $_GET['join'];
+  $check = $conn->query("SELECT * FROM tutorial_signups WHERE student_id=$student_id AND tutorial_id=$tutorial_id");
+  if ($check->num_rows == 0) {
+    $conn->query("INSERT INTO tutorial_signups (tutorial_id, student_id) VALUES ($tutorial_id, $student_id)");
+  }
+} elseif (isset($_GET['withdraw'])) {
+  $tutorial_id = $_GET['withdraw'];
+  $conn->query("DELETE FROM tutorial_signups WHERE student_id=$student_id AND tutorial_id=$tutorial_id");
+}
+
+$tutorials = $conn->query("SELECT t.*, m.name AS mentor_name FROM tutorials t JOIN mentors m ON t.mentor_id = m.id WHERE t.is_public=1");
+$my_signups = $conn->query("SELECT tutorial_id FROM tutorial_signups WHERE student_id=$student_id");
+$signed_ids = [];
+while($row = $my_signups->fetch_assoc()) {
+  $signed_ids[] = $row['tutorial_id'];
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Dashboard</title>
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0097e6, #00a8ff, #273c75);
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    color: #2f3640;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    color: #fff;
+  }
+
+  .header h2 {
+    margin: 0;
+  }
+
+  .btn-logout {
+    background: #e84118;
+    color: white;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .btn-logout:hover {
+    background: #c23616;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    max-width: 1000px;
+    margin: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+
+  table th, table td {
+    border: 1px solid #dcdde1;
+    padding: 12px;
+    text-align: left;
+  }
+
+  table th {
+    background: #0097e6;
+    color: white;
+    font-weight: 600;
+  }
+
+  table tr:nth-child(even) {
+    background: #f5f6fa;
+  }
+
+  .action-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    color: white;
+    transition: 0.3s;
+  }
+
+  .join-btn {
+    background: #44bd32;
+  }
+
+  .join-btn:hover {
+    background: #4cd137;
+  }
+
+  .withdraw-btn {
+    background: #e84118;
+  }
+
+  .withdraw-btn:hover {
+    background: #c23616;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h2>Welcome, <?php echo htmlspecialchars($student_name); ?>!</h2>
+  <a class="btn-logout" href="logout.php">Logout</a>
+</div>
+
+<div class="card">
+  <h3>Available Tutorials</h3>
+  <table>
+    <tr>
+      <th>Title</th>
+      <th>Topic</th>
+      <th>Mentor</th>
+      <th>Schedule</th>
+      <th>Duration</th>
+      <th>Action</th>
+    </tr>
+    <?php while($row = $tutorials->fetch_assoc()): ?>
+    <tr>
+      <td><?php echo htmlspecialchars($row['title']); ?></td>
+      <td><?php echo htmlspecialchars($row['topic']); ?></td>
+      <td><?php echo htmlspecialchars($row['mentor_name']); ?></td>
+      <td><?php echo htmlspecialchars($row['schedule']); ?></td>
+      <td><?php echo htmlspecialchars($row['duration']); ?></td>
+      <td>
+        <?php if (in_array($row['id'], $signed_ids)): ?>
+          <a class="action-btn withdraw-btn" href="?withdraw=<?php echo $row['id']; ?>">Withdraw</a>
+        <?php else: ?>
+          <a class="action-btn join-btn" href="?join=<?php echo $row['id']; ?>">Join</a>
+        <?php endif; ?>
+      </td>
+    </tr>
+    <?php endwhile; ?>
+  </table>
+</div>
+
+</body>
+</html>
