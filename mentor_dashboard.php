@@ -95,10 +95,18 @@ $tutorials = $conn->query("SELECT * FROM tutorials WHERE mentor_id = $mentor_id"
     color: white;
     background: #44bd32;
     transition: 0.3s;
+    display: inline-block;
   }
 
   .view-btn:hover {
     background: #4cd137;
+  }
+
+  .no-tutorials {
+    text-align: center;
+    color: #718093;
+    padding: 40px;
+    font-size: 1.1rem;
   }
 
 </style>
@@ -115,22 +123,28 @@ $tutorials = $conn->query("SELECT * FROM tutorials WHERE mentor_id = $mentor_id"
 
 <div class="card">
   <h3>Your Tutorials</h3>
-  <table>
-    <tr>
-      <th>Title</th>
-      <th>Topic</th>
-      <th>Schedule</th>
-      <th>View Students</th>
-    </tr>
-    <?php while($row = $tutorials->fetch_assoc()): ?>
+  <?php if ($tutorials->num_rows > 0): ?>
+    <table>
       <tr>
-        <td><?php echo htmlspecialchars($row['title']); ?></td>
-        <td><?php echo htmlspecialchars($row['topic']); ?></td>
-        <td><?php echo htmlspecialchars($row['schedule']); ?></td>
-        <td><a class="view-btn" href="view_students.php?tutorial_id=<?php echo $row['id']; ?>">View</a></td>
+        <th>Title</th>
+        <th>Topic</th>
+        <th>Schedule</th>
+        <th>View Students</th>
       </tr>
-    <?php endwhile; ?>
-  </table>
+      <?php while($row = $tutorials->fetch_assoc()): ?>
+        <tr>
+          <td><?php echo htmlspecialchars($row['title']); ?></td>
+          <td><?php echo htmlspecialchars($row['topic']); ?></td>
+          <td><?php echo htmlspecialchars($row['schedule']); ?></td>
+          <td><a class="view-btn" href="view_students.php?tutorial_id=<?php echo $row['id']; ?>">View</a></td>
+        </tr>
+      <?php endwhile; ?>
+    </table>
+  <?php else: ?>
+    <div class="no-tutorials">
+      You haven't created any tutorials yet. Click "Create New Tutorial" to get started!
+    </div>
+  <?php endif; ?>
 </div>
 
 </body>
